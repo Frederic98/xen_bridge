@@ -3,6 +3,8 @@ An object-oriented Xen API for python
 
 Tested on XCP-ng, but should also work on XenServer
 
+**Install** from pypi using `pip install xen-bridge`
+
 ## Usage
 ```python
 from xenbridge import XenConnection
