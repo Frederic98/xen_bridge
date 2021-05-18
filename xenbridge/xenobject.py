@@ -33,7 +33,7 @@ class XenEndpoint:
         if typing.get_origin(typehint) is dict:
             # Dict[x,y]
             key_hint, val_hint = typing.get_args(typehint)
-            return {self.ref2xen(key, key_hint): self.ref2xen(val, val_hint) for (key, val) in obj}
+            return {self.ref2xen(key, key_hint): self.ref2xen(val, val_hint) for (key, val) in obj.items()}
         if typing.get_origin(typehint) is typing.Union:
             # Optional[x] -> Union[x, None]
             hint_arg = None
