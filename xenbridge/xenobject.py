@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any
+from typing import Any, Tuple, Union
 import datetime
 import sys
 import typing
@@ -17,7 +17,7 @@ class XenEndpoint:
         return self.connection.call(self.xenpath + '.' + methodname, *self.xen2ref(args))
 
     def ref2xen(self, obj, typehint):
-        if typehint is None or issubclass(typehint, None.__class__):
+        if typehint is None or self.issubclass(typehint, None.__class__):
             return None
         if typing.get_origin(typehint) is list:
             # List[x]
@@ -38,19 +38,19 @@ class XenEndpoint:
             # Optional[x] -> Union[x, None]
             hint_arg = None
             for arg in typing.get_args(typehint):
-                if not issubclass(arg, None.__class__):     # arg != NoneType
+                if not self.issubclass(arg, None.__class__):     # arg != NoneType
                     if hint_arg is not None:
                         raise ValueError("Type hint 'Union' not supported")
                     hint_arg = arg
             if obj is None:
                 return None
             return self.ref2xen(obj, hint_arg)
-        if inspect.isclass(typehint) and issubclass(typehint, (bool, int, float)):
+        if self.issubclass(typehint, (bool, int, float)):
             # Basic types
             return typehint(obj)
-        if inspect.isclass(typehint) and issubclass(typehint, XenObject):
+        if self.issubclass(typehint, XenObject):
             return typehint(self.connection, obj)
-        if inspect.isclass(typehint) and issubclass(typehint, XenEnum):
+        if self.issubclass(typehint, XenEnum):
             return typehint(obj)
         if typehint is datetime.datetime:
             date = datetime.datetime.strptime(obj.value, '%Y%m%dT%H:%M:%SZ')
@@ -68,6 +68,10 @@ class XenEndpoint:
         if isinstance(value, XenEnum):
             return value.value
         return value
+
+    @staticmethod
+    def issubclass(cls: type, classinfo: Union[type, Tuple[type, ...]]):
+        return inspect.isclass(cls) and issubclass(cls, classinfo)
 
 
 class XenObject(XenEndpoint):
