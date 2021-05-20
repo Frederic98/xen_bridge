@@ -63,7 +63,7 @@ from .vmpp import VMPP, VMPPEndpoint
 from .vmss import VMSS, VMSSEndpoint
 from .vtpm import VTPM, VTPMEndpoint
 from .vusb import VUSB, VUSBEndpoint
-from .xenobject import XenObject, XenEndpoint
+from .xenobject import XenObject, XenEndpoint, XenError
 from .xenconnection import XenConnectionBase
 
 class XenConnection(XenConnectionBase):

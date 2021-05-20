@@ -1,5 +1,5 @@
 import typing
-from . import *
+from . import Session, XenError
 import xmlrpc.client
 
 
@@ -43,5 +43,8 @@ class XenConnectionBase:
         result = func(*args)
         if result['Status'] == 'Success':
             return result['Value']
-        raise RuntimeError(result)
+        elif result['Status'] == 'Failure':
+            raise XenError(result)
+        else:
+            raise ValueError('Got an unknown response!')
 

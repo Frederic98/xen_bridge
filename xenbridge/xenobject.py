@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Union, Dict
 import datetime
 import sys
 import typing
@@ -174,3 +174,10 @@ class XenProperty:
 
 class XenEnum(enum.Enum):
     ...
+
+
+class XenError(RuntimeError):
+    def __init__(self, message: Dict[str, Any]):
+        description = message['ErrorDescription']
+        self.error_code, *self.error_args = description
+        super().__init__(f'{self.error_code} ({", ".join(self.error_args)})')

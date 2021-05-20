@@ -21,6 +21,15 @@ xoa_vm.name_description = 'This is a VM'
 xoa_vm.start()      # Spin up the VM
 ```
 
+### Exceptions
+While calling API methods, XEN might return an error. When this happens, a `XenError` is raised. When catching the exception, the error code can be accessed through the `error_code` attribute
+```python
+# Assuming VM is already running:
+try:
+    xoa_vm.start()      # Should throw an error
+except xenbridge.XenError as e:
+    print(e.error_code)     # Prints 'VM_BAD_POWER_STATE'
+```
 ## How it works
 Firstly, `xenboject.py` defines some helper functions and baseclasses for the endpoints that do the actual work of calling the XMLRPC API and casting the data to the corresponding types.  
 
