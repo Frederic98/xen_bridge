@@ -1,13 +1,17 @@
 import typing
 from . import Session, XenError
 import xmlrpc.client
+try:
+    import requests
+except ImportError:
+    requests = None
 
 
 class XenConnectionBase:
 
-    def __init__(self, host: str, user: str, passwd: str, version='1.0', emergency_mode=False):
+    def __init__(self, host: str, user: str, passwd: str, version='1.0', emergency_mode=False, **kwargs):
         self.host = host
-        self.proxy = xmlrpc.client.ServerProxy(self.host)
+        self.proxy = xmlrpc.client.ServerProxy(self.host, **kwargs)
         self.user = user
         self.passwd = passwd
         self.api_version = version
@@ -48,3 +52,47 @@ class XenConnectionBase:
         else:
             raise ValueError('Got an unknown response!')
 
+
+class RequestsTransport(xmlrpc.client.Transport):
+    """
+    Drop in Transport for xmlrpclib that uses Requests instead of httplib
+    """
+
+    # change our user agent to reflect Requests
+    user_agent = "Python XMLRPC with Requests (python-requests.org)"
+
+    # override this if you'd like to https
+    use_https = False
+
+    def __init__(self, use_datetime=False, use_builtin_types=False,
+                 *, headers=(), https=use_https, verbose=False):
+        if requests is None:
+            raise RuntimeError('Requests not available')
+        xmlrpc.client.Transport.__init__(self,
+                                         use_datetime=use_datetime,
+                                         use_builtin_types=use_builtin_types,
+                                         headers=headers)
+        self.use_https = https
+        self.verbose = verbose
+
+    def request(self, host, handler, request_body, verbose=False):
+        """
+        Make an xmlrpc request.
+        """
+        headers = {'User-Agent': self.user_agent}
+        url = self._build_url(host, handler)
+        resp = requests.post(url, data=request_body, headers=headers, stream=True)
+        try:
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise xmlrpc.client.ProtocolError(url, resp.status_code, str(e), resp.headers)
+        else:
+            return self.parse_response(resp.raw)
+
+    def _build_url(self, host, handler):
+        """
+        Build a url for our request based on the host, handler and use_http
+        property
+        """
+        scheme = 'https' if self.use_https else 'http'
+        return '%s://%s/%s' % (scheme, host, handler)
